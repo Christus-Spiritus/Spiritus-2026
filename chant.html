@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chant d'invocation</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="chant-page">
+    <div class="chant-card">
+      <div class="nav">
+        <a class="inline-link" href="index.html">← Retour au parcours</a>
+      </div>
+      <h1 id="chantTitle">Chant</h1>
+      <p class="muted">Le chant affiché dépend du réglage choisi dans l’application.</p>
+      <img id="chantImage" class="chant-image" src="" alt="Chant d'invocation" />
+    </div>
+  </main>
+  <script src="spiritusContent.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const chant = params.get("chant") || "Veni Creator";
+    const data = window.SPIRITUS_CHANTS[chant] || window.SPIRITUS_CHANTS["Veni Creator"];
+    document.getElementById("chantTitle").textContent = data.title;
+    document.getElementById("chantImage").src = data.file;
+    document.getElementById("chantImage").alt = data.title;
+  </script>
+</body>
+</html>
