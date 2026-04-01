@@ -1,226 +1,42 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spiritus – 50 jours pour vivre de l’Esprit Saint</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spiritus</title>
+
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#7b1c0a">
+
+  <!-- iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <!-- Favicons -->
   <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
-  <meta name="theme-color" content="#d94b1c">
+
+  <!-- Splash screens iPhone -->
+  <link rel="apple-touch-startup-image" href="apple-splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="apple-splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="apple-splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="apple-splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="apple-splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="apple-splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="apple-splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <header class="hero">
-    <div class="hero-inner">
-      <div class="hero-copy">
-        <div class="badges">
-          <span class="badge hero-badge">Temps pascal</span>
-          <span class="badge hero-badge">50 jours</span>
-          <span class="badge hero-badge">Esprit Saint</span>
-        </div>
-        <h1>Spiritus – 50 jours pour vivre de l’Esprit Saint</h1>
-        <p>Commencer chaque journée en invoquant l’Esprit Saint, accueillir la Parole dans les Actes des Apôtres, fixer un temps d’oraison, puis relire le soir ce que l’Esprit a porté comme fruit.</p>
-        <div class="hero-actions">
-          <a class="inline-link" href="guide-spiritus.pdf" target="_blank" rel="noopener">Ouvrir le guide du parcours (PDF)</a>
-        </div>
-      </div>
-      <img class="hero-image" src="spiritus-cover.png" alt="Visuel Spiritus" />
-    </div>
-  </header>
 
-  <main class="page">
-    <div class="layout">
-      <section>
-        <div class="card">
-          <div class="topbar">
-            <div>
-              <h2 id="dateTitle">Dimanche 5 avril 2026 — Jour 1</h2>
-              <div id="dayMeta" class="muted"></div>
-            </div>
-            <div class="nav">
-              <button class="secondary" id="prevBtn" type="button">← Jour précédent</button>
-              <button class="secondary" id="todayBtn" type="button">Aujourd’hui</button>
-              <button class="secondary" id="nextBtn" type="button">Jour suivant →</button>
-            </div>
-          </div>
-        </div>
+  <div id="app"></div>
 
-        <div class="card">
-          <div id="weekBadges" class="badges"></div>
-
-          <div class="task">
-            <div class="taskhead">
-              <div class="grow">
-                <div class="task-title">Commencer la journée en invoquant l’Esprit Saint</div>
-                <p id="invocationText"></p>
-                <div id="giftQuoteInvocation" class="gift-quote-box"></div>
-                <div class="task-actions">
-                  <a id="chantLink" class="inline-link" href="chant.html" target="_blank" rel="noopener">Ouvrir le chant choisi</a>
-                </div>
-              </div>
-              <label class="checkline fixed-check"><input type="checkbox" id="invocationDone" /> <span>fait</span></label>
-            </div>
-          </div>
-
-          <div class="task">
-            <div class="taskhead">
-              <div class="grow">
-                <div class="task-title">Lire le passage du jour</div>
-                <p id="readingPreview"></p>
-              </div>
-              <label class="checkline fixed-check"><input type="checkbox" id="actsRead" /> <span>fait</span></label>
-            </div>
-            <div class="task-actions">
-              <button id="scrollToReadingBtn" class="ghost small" type="button">Aller à la Parole de Dieu du jour</button>
-            </div>
-          </div>
-
-          <div class="task scripture" id="readingSection">
-            <div class="taskhead">
-              <div>
-                <div class="task-title">Parole de Dieu du jour</div>
-                <p id="readingRef"></p>
-              </div>
-              <button id="toggleTextBtn" class="ghost small" type="button">Lire le texte</button>
-            </div>
-            <div id="readingExcerpt" class="reading-excerpt"></div>
-            <div id="readingFull" class="scripture-full hidden"></div>
-          </div>
-
-          <div class="task">
-            <div class="taskhead">
-              <div class="grow">
-                <div class="task-title">Lire la méditation du jour</div>
-                <p id="meditationText"></p>
-              </div>
-              <label class="checkline fixed-check"><input type="checkbox" id="meditationRead" /> <span>fait</span></label>
-            </div>
-          </div>
-
-          <div class="task">
-            <div class="task-title">Temps d’oraison</div>
-            <p>Fixer et vivre un vrai rendez-vous de prière. Minimum conseillé : 10 minutes.</p>
-            <div class="two">
-              <div>
-                <label class="label" for="prayerMinutes">Minutes prévues ou réalisées</label>
-                <input type="number" min="1" id="prayerMinutes" />
-              </div>
-              <div>
-                <label class="label">&nbsp;</label>
-                <button id="prayerDoneBtn" class="secondary full" type="button">Valider l’oraison</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="task">
-            <div class="task-title">Relecture du soir</div>
-            <p>Rendre grâce pour les bienfaits reçus et discerner ce qui venait de l’Esprit Saint dans la journée.</p>
-            <div class="two">
-              <div>
-                <label class="label" for="gratitude">Action de grâce</label>
-                <textarea id="gratitude" rows="6" placeholder="Quels bienfaits ai-je reçus aujourd'hui ?"></textarea>
-              </div>
-              <div>
-                <label class="label" for="spiritDiscernment">Discernement</label>
-                <textarea id="spiritDiscernment" rows="6" placeholder="Où ai-je reconnu l'œuvre de l'Esprit Saint ?"></textarea>
-              </div>
-            </div>
-
-            <div class="fruits-wrap">
-              <div class="label">Fruits reconnus aujourd’hui</div>
-              <div id="fruitsBox" class="fruits-grid"></div>
-            </div>
-
-            <button id="reviewDoneBtn" class="secondary" type="button">Valider la relecture</button>
-          </div>
-
-          <div id="fridayCard" class="card hidden"></div>
-
-          <div class="card">
-            <div class="task-title">Réinitialiser</div>
-            <div class="nav top-space">
-              <button id="resetDayBtn" class="ghost" type="button">Réinitialiser le jour</button>
-              <button id="resetWeekBtn" class="ghost" type="button">Réinitialiser la semaine</button>
-              <button id="resetAllBtn" type="button">Tout réinitialiser</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <aside>
-        <div class="card stats">
-          <div class="stat">
-            <div class="label">Aujourd’hui</div>
-            <strong id="dayProgress">0%</strong>
-          </div>
-          <div class="stat">
-            <div class="label" id="weekLabel">Semaine 1</div>
-            <strong id="weekProgress">0%</strong>
-          </div>
-          <div class="stat">
-            <div class="label">Parcours</div>
-            <strong id="overallProgress">0%</strong>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="task-title">Semaine en cours</div>
-          <div id="weekSummary" class="top-space"></div>
-          <div id="giftQuoteWeek" class="gift-quote-box"></div>
-          <div class="top-space">
-            <label class="label" for="weekPrayerStyle">Manière de prier cette semaine</label>
-            <select id="weekPrayerStyle"></select>
-          </div>
-          <div class="top-space">
-            <label class="label" for="weekIntention">Intention personnelle</label>
-            <textarea id="weekIntention" rows="4" placeholder="Ce que je demande, ce que je veux vivre, une décision à discerner..."></textarea>
-          </div>
-          <div class="week-grid top-space" id="weekGrid"></div>
-        </div>
-
-        <details class="card settings-details">
-          <summary class="settings-summary">Réglages du parcours</summary>
-          <div class="setting-note top-space">La date de début est fixée au dimanche de Pâques : 5 avril 2026.</div>
-          <div class="top-space">
-            <label class="label" for="defaultInvocation">Invocation de départ</label>
-            <select id="defaultInvocation"></select>
-          </div>
-          <div class="top-space">
-            <label class="label" for="fridayPenance">Pénitence du vendredi</label>
-            <textarea id="fridayPenance" rows="4"></textarea>
-          </div>
-          <div class="top-space">
-            <label class="label" for="postLentResolution">Résolution d’après-Carême</label>
-            <textarea id="postLentResolution" rows="4"></textarea>
-          </div>
-          <div class="top-space">
-            <a class="inline-link" href="guide-spiritus.pdf" target="_blank" rel="noopener">Ouvrir le guide du parcours (PDF)</a>
-          </div>
-        </details>
-
-        <div class="card">
-          <div class="task-title">Décision à vivre maintenant</div>
-          <p id="resolutionText" class="top-space"></p>
-        </div>
-      </aside>
-    </div>
-  </main>
-
-  <div id="confirmModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalText">
-      <h3 id="confirmModalTitle">Êtes-vous sûr ?</h3>
-      <p id="confirmModalText">Vous allez perdre toutes vos informations.</p>
-      <div class="modal-actions">
-        <button id="cancelResetBtn" class="secondary" type="button">Annuler</button>
-        <button id="confirmResetBtn" type="button">Tout réinitialiser</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- Scripts -->
   <script src="spiritusContent.js"></script>
   <script src="app.js"></script>
+
 </body>
 </html>
