@@ -152,7 +152,7 @@ function render(){
   document.getElementById("fridayPenance").value=state.settings.fridayPenance;
   document.getElementById("postLentResolution").value=state.settings.postLentResolution;
   document.getElementById("resolutionText").textContent=state.settings.postLentResolution;
-  document.getElementById("weekSummary").innerHTML=`<span class="badge">Don commun : ${giftData.name}</span><div class="muted top-space">Choisir chaque semaine une manière de prier et une intention personnelle.</div>`;
+  document.getElementById("weekSummary").innerHTML=`<span class="badge">Don de la semaine : ${giftData.name}</span><div class="muted top-space">Choisir chaque semaine une manière de prier et une intention personnelle.</div>`;
   document.getElementById("weekPrayerStyle").value=weekChoice.prayerStyle;
   document.getElementById("weekIntention").value=weekChoice.personalIntention||"";
   renderFruits(dayState);renderWeekGrid();renderProgress();renderFridayCard();
