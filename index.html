@@ -203,6 +203,17 @@
     </div>
   </main>
 
+  <div id="confirmModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalText">
+      <h3 id="confirmModalTitle">Êtes-vous sûr ?</h3>
+      <p id="confirmModalText">Vous allez perdre toutes vos informations.</p>
+      <div class="modal-actions">
+        <button id="cancelResetBtn" class="secondary" type="button">Annuler</button>
+        <button id="confirmResetBtn" type="button">Tout réinitialiser</button>
+      </div>
+    </div>
+  </div>
+
   <script src="spiritusContent.js"></script>
   <script src="app.js"></script>
 </body>

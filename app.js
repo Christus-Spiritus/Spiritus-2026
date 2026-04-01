@@ -3,8 +3,27 @@ const STORAGE_KEY = "spiritus-static-v5";
 const TOTAL_DAYS = 50;
 const FIXED_START_DATE = "2026-04-05";
 const FRUITS = ["Amour","Joie","Paix","Patience","Bonté","Bienveillance","Fidélité","Douceur","Maîtrise de soi"];
-const PRAYER_STYLES = ["Liturgie des Heures","Louange","Lectio divina","Chapelet","Chapelet de la miséricorde","Adoration","Prière spontanée","Silence devant Dieu"];
+const PRAYER_STYLES = ["Liturgie des Heures","Louange","Lectio divina","Chapelet","Chapelet de la miséricorde","Adoration","Prière spontanée"];
 const INVOCATIONS = ["Veni Creator","Viens Esprit de sainteté","Esprit de Lumière"];
+
+const SPECIAL_DAYS = {
+  1: "Dimanche de Pâques",
+  2 : "Octave de Pâques",
+  3 : "Octave de Pâques",
+  4 : "Octave de Pâques",
+  5 : "Octave de Pâques",
+  7 : "Octave de Pâques",
+  8: "2e dimanche de Pâques",
+  21: "Saint Marc",
+  15: "3e dimanche de Pâques",
+  22: "4e dimanche de Pâques",
+  29: "5e dimanche de Pâques",
+  40: "Ascension",
+  36: "6e dimanche de Pâques",
+  43: "6e dimanche de Pâques",
+  50: "Pentecôte"
+};
+
 
 function createDefaultDailyState(){
   const daily={};
@@ -47,11 +66,32 @@ function updateWeek(index,patch){state.weeklyChoices[index]={...state.weeklyChoi
 function setCurrentDay(day){state.currentDay=Math.max(1,Math.min(TOTAL_DAYS,day));showFullText=false;saveState();render();}
 function resetDay(){const fresh=createDefaultDailyState();state.daily[state.currentDay]=fresh[state.currentDay];saveState();render();}
 function resetWeek(){const fresh=createDefaultDailyState();const[start,end]=getWeekRange(getWeek(state.currentDay));for(let day=start;day<=end;day++)state.daily[day]=fresh[day];saveState();render();}
-function resetAll(){if(!window.confirm("Êtes-vous sûr de vouloir réinitialiser ? Vous allez perdre toutes vos informations.")) return;state=createDefaultState();state.currentDay=getJourneyDay();showFullText=false;saveState();render();}
+
+function performResetAll(){
+  state=createDefaultState();
+  state.currentDay=getJourneyDay();
+  showFullText=false;
+  saveState();
+  render();
+}
+function openResetModal(){
+  const modal=document.getElementById("confirmModal");
+  if(!modal) return;
+  modal.classList.remove("hidden");
+}
+function closeResetModal(){
+  const modal=document.getElementById("confirmModal");
+  if(!modal) return;
+  modal.classList.add("hidden");
+}
+function resetAll(){
+  openResetModal();
+}
 function toggleFruit(fruit){const set=new Set(state.daily[state.currentDay].fruitsChecked);if(set.has(fruit))set.delete(fruit);else set.add(fruit);updateDay({fruitsChecked:Array.from(set)});}
 function formatFrenchDate(iso){const d=new Date(`${iso}T00:00:00`);return d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});}
 function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 function currentGiftData(){return window.SPIRITUS_GIFTS[getWeek(state.currentDay)-1];}
+function getSpecialDayLabel(day){return SPECIAL_DAYS[day] || "";}
 function populateStaticSelects(){document.getElementById("defaultInvocation").innerHTML=INVOCATIONS.map(v=>`<option value="${v}">${v}</option>`).join("");document.getElementById("weekPrayerStyle").innerHTML=PRAYER_STYLES.map(v=>`<option value="${v}">${v}</option>`).join("");}
 function bindEvents(){
   document.getElementById("prevBtn").addEventListener("click",()=>setCurrentDay(state.currentDay-1));
@@ -70,6 +110,9 @@ function bindEvents(){
   document.getElementById("resetDayBtn").addEventListener("click",resetDay);
   document.getElementById("resetWeekBtn").addEventListener("click",resetWeek);
   document.getElementById("resetAllBtn").addEventListener("click",resetAll);
+  document.getElementById("cancelResetBtn").addEventListener("click",closeResetModal);
+  document.getElementById("confirmResetBtn").addEventListener("click",()=>{closeResetModal();performResetAll();});
+  document.getElementById("confirmModal").addEventListener("click",(e)=>{if(e.target.id==="confirmModal") closeResetModal();});
   document.getElementById("defaultInvocation").addEventListener("change",e=>updateSettings({defaultInvocation:e.target.value}));
   document.getElementById("fridayPenance").addEventListener("input",e=>updateSettings({fridayPenance:e.target.value}));
   document.getElementById("postLentResolution").addEventListener("input",e=>updateSettings({postLentResolution:e.target.value}));
@@ -82,10 +125,10 @@ function renderProgress(){const isPenanceFriday=isFridayForJourneyDay(state.curr
 function renderFridayCard(){const card=document.getElementById("fridayCard");const isFriday=isFridayForJourneyDay(state.currentDay);const isPenanceFriday=isFriday&&!(state.currentDay>=1&&state.currentDay<=8);if(!isFriday){card.classList.add("hidden");return;}card.classList.remove("hidden");if(isPenanceFriday){card.innerHTML=`<div class="task-title">Vendredi de pénitence</div><p class="top-space">${state.settings.fridayPenance}</p><label class="checkline fixed-check top-space"><input type="checkbox" id="fridayPenanceDone" ${state.daily[state.currentDay].fridayPenanceDone?"checked":""}> <span>Pénitence vécue</span></label>`;document.getElementById("fridayPenanceDone").addEventListener("change",e=>updateDay({fridayPenanceDone:e.target.checked}));}else{card.innerHTML=`<div class="task-title">Vendredi dans l’octave de Pâques</div><p class="top-space">Dans l’octave de Pâques, le vendredi n’est pas vécu comme un jour de pénitence : on demeure dans la joie pascale.</p>`;}}
 function renderGiftQuote(targetId,giftData){document.getElementById(targetId).innerHTML=`<div class="gift-quote">${giftData.quote}</div><span class="gift-ref">${giftData.ref}</span>`;}
 function render(){
-  const content=currentContent();const dayState=state.daily[state.currentDay];const week=getWeek(state.currentDay);const weekChoice=state.weeklyChoices[week-1];const giftData=currentGiftData();const isFriday=isFridayForJourneyDay(state.currentDay);const isPenanceFriday=isFriday&&!(state.currentDay>=1&&state.currentDay<=8);
+  const content=currentContent();const dayState=state.daily[state.currentDay];const week=getWeek(state.currentDay);const weekChoice=state.weeklyChoices[week-1];const giftData=currentGiftData();const isFriday=isFridayForJourneyDay(state.currentDay);const isPenanceFriday=isFriday&&!(state.currentDay>=1&&state.currentDay<=8);const specialDayLabel=getSpecialDayLabel(state.currentDay);
   document.getElementById("dateTitle").textContent=`${capitalize(formatFrenchDate(content.date))} — Jour ${state.currentDay}`;
-  document.getElementById("dayMeta").innerHTML=`<span class="badge">Semaine ${week}</span><span class="badge">Don : ${giftData.name}</span>${isFriday?`<span class="badge ${isPenanceFriday?"warn":"ok"}">${isPenanceFriday?"Vendredi de pénitence":"Vendredi dans l’octave de Pâques"}</span>`:""}`;
-  document.getElementById("weekBadges").innerHTML=`<span class="badge">Don de la semaine : ${giftData.name}</span><span class="badge">Invocation : ${state.settings.defaultInvocation}</span><span class="badge">Date liturgique : ${content.date}</span>`;
+  document.getElementById("dayMeta").innerHTML=`<span class="badge">Semaine ${week}</span><span class="badge">Don : ${giftData.name}</span>${specialDayLabel?`<span class="badge ok">${specialDayLabel}</span>`:""}${isFriday?`<span class="badge ${isPenanceFriday?"warn":"ok"}">${isPenanceFriday?"Vendredi de pénitence":"Vendredi dans l’octave de Pâques"}</span>`:""}`;
+  document.getElementById("weekBadges").innerHTML=`<span class="badge">Don de la semaine : ${giftData.name}</span><span class="badge">Invocation : ${state.settings.defaultInvocation}</span><span class="badge">Date liturgique : ${content.date}</span>${specialDayLabel?`<span class="badge ok">${specialDayLabel}</span>`:""}`;
   document.getElementById("invocationText").textContent=`Chant proposé : ${state.settings.defaultInvocation}. Don demandé cette semaine : ${giftData.name}.`;
   renderGiftQuote("giftQuoteInvocation", giftData);
   renderGiftQuote("giftQuoteWeek", giftData);
