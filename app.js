@@ -24,7 +24,6 @@ const SPECIAL_DAYS = {
   50: "Pentecôte"
 };
 
-
 function createDefaultDailyState(){
   const daily={};
   for(let i=1;i<=TOTAL_DAYS;i++){
@@ -54,10 +53,10 @@ function loadState(){
     const raw=localStorage.getItem(STORAGE_KEY);
     if(!raw){fallback.currentDay=getJourneyDay();return fallback;}
     const parsed=JSON.parse(raw);
-    return{...fallback,...parsed,settings:{...fallback.settings,...(parsed.settings||{})},weeklyChoices:Array.isArray(parsed.weeklyChoices)?parsed.weeklyChoices:fallback.weeklyChoices,daily:{...fallback.daily,...(parsed.daily||{})},currentDay:typeof parsed.currentDay==="number"?parsed.currentDay:getJourneyDay()};
+    return{...fallback,...parsed,settings:{...fallback.settings,...(parsed.settings||{})},weeklyChoices:Array.isArray(parsed.weeklyChoices)?parsed.weeklyChoices:fallback.weeklyChoices,daily:{...fallback.daily,...(parsed.daily||{})},currentDay:getJourneyDay()};
   }catch{return {...fallback,currentDay:getJourneyDay()};}
 }
-let state=loadState(); let showFullText=false;
+let state=loadState(); state.currentDay=getJourneyDay(); let showFullText=false;
 function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
 function currentContent(){return window.SPIRITUS_CONTENT[state.currentDay-1];}
 function updateDay(patch){state.daily[state.currentDay]={...state.daily[state.currentDay],...patch};saveState();render();}
@@ -66,7 +65,27 @@ function updateWeek(index,patch){state.weeklyChoices[index]={...state.weeklyChoi
 function setCurrentDay(day){state.currentDay=Math.max(1,Math.min(TOTAL_DAYS,day));showFullText=false;saveState();render();}
 function resetDay(){const fresh=createDefaultDailyState();state.daily[state.currentDay]=fresh[state.currentDay];saveState();render();}
 function resetWeek(){const fresh=createDefaultDailyState();const[start,end]=getWeekRange(getWeek(state.currentDay));for(let day=start;day<=end;day++)state.daily[day]=fresh[day];saveState();render();}
-function resetAll(){if(!window.confirm("Êtes-vous sûr ?\n\nVous allez perdre toutes vos informations.")) return;state=createDefaultState();state.currentDay=getJourneyDay();showFullText=false;saveState();render();}
+
+function performResetAll(){
+  state=createDefaultState();
+  state.currentDay=getJourneyDay();
+  showFullText=false;
+  saveState();
+  render();
+}
+function openResetModal(){
+  const modal=document.getElementById("confirmModal");
+  if(!modal) return;
+  modal.classList.remove("hidden");
+}
+function closeResetModal(){
+  const modal=document.getElementById("confirmModal");
+  if(!modal) return;
+  modal.classList.add("hidden");
+}
+function resetAll(){
+  openResetModal();
+}
 function toggleFruit(fruit){const set=new Set(state.daily[state.currentDay].fruitsChecked);if(set.has(fruit))set.delete(fruit);else set.add(fruit);updateDay({fruitsChecked:Array.from(set)});}
 function formatFrenchDate(iso){const d=new Date(`${iso}T00:00:00`);return d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});}
 function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1);}
@@ -90,6 +109,9 @@ function bindEvents(){
   document.getElementById("resetDayBtn").addEventListener("click",resetDay);
   document.getElementById("resetWeekBtn").addEventListener("click",resetWeek);
   document.getElementById("resetAllBtn").addEventListener("click",resetAll);
+  document.getElementById("cancelResetBtn").addEventListener("click",closeResetModal);
+  document.getElementById("confirmResetBtn").addEventListener("click",()=>{closeResetModal();performResetAll();});
+  document.getElementById("confirmModal").addEventListener("click",(e)=>{if(e.target.id==="confirmModal") closeResetModal();});
   document.getElementById("defaultInvocation").addEventListener("change",e=>updateSettings({defaultInvocation:e.target.value}));
   document.getElementById("fridayPenance").addEventListener("input",e=>updateSettings({fridayPenance:e.target.value}));
   document.getElementById("postLentResolution").addEventListener("input",e=>updateSettings({postLentResolution:e.target.value}));
@@ -129,11 +151,15 @@ function render(){
   document.getElementById("fridayPenance").value=state.settings.fridayPenance;
   document.getElementById("postLentResolution").value=state.settings.postLentResolution;
   document.getElementById("resolutionText").textContent=state.settings.postLentResolution;
-  document.getElementById("weekSummary").innerHTML=`<span class="badge">Don commun : ${giftData.name}</span><div class="muted top-space">Choisir chaque semaine une manière de prier et une intention personnelle.</div>`;
+  document.getElementById("weekSummary").innerHTML=`<span class="badge">Don de la semaine : ${giftData.name}</span><div class="muted top-space">Choisir chaque semaine une manière de prier et une intention personnelle.</div>`;
   document.getElementById("weekPrayerStyle").value=weekChoice.prayerStyle;
   document.getElementById("weekIntention").value=weekChoice.personalIntention||"";
   renderFruits(dayState);renderWeekGrid();renderProgress();renderFridayCard();
 }
 populateStaticSelects();
 bindEvents();
+state.currentDay=getJourneyDay();
+saveState();
 render();
+
+window.addEventListener("pageshow",()=>{state.currentDay=getJourneyDay();saveState();render();});
