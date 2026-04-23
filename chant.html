@@ -1,30 +1,44 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chant d'invocation</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <main class="chant-page">
-    <div class="chant-card">
-      <div class="nav">
-        <a class="inline-link" href="index.html">← Retour au parcours</a>
-      </div>
-      <h1 id="chantTitle">Chant</h1>
-      <p class="muted">Le chant affiché dépend du réglage choisi dans l’application.</p>
-      <img id="chantImage" class="chant-image" src="" alt="Chant d'invocation" />
-    </div>
-  </main>
-  <script src="spiritusContent.js"></script>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const chant = params.get("chant") || "Veni Creator";
-    const data = window.SPIRITUS_CHANTS[chant] || window.SPIRITUS_CHANTS["Veni Creator"];
-    document.getElementById("chantTitle").textContent = data.title;
-    document.getElementById("chantImage").src = data.file;
-    document.getElementById("chantImage").alt = data.title;
-  </script>
-</body>
-</html>
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Chant d'invocation</title><link rel="stylesheet" href="style.css" /></head><body><main class="chant-page"><div class="chant-card"><div class="nav"><a id="backToParcours" class="inline-link" href="index.html">← Retour au parcours</a></div><h1 id="chantTitle">Chant</h1><p class="muted">Le chant affiché dépend du réglage choisi dans l’application.</p><img id="chantImage" class="chant-image" src="" alt="Chant d'invocation" /></div></main><script src="spiritusContent.js"></script>
+<script>
+(function(){
+  const STORAGE_KEY = "spiritus-static-v5";
+  const INVOCATION_KEY = "spiritus-default-invocation";
+  const INVOCATIONS = ["Veni Creator","Viens Esprit de sainteté","Esprit de Lumière"];
+  const params = new URLSearchParams(window.location.search);
+  let chant = params.get("chant");
+  try{
+    if(!chant){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        const parsed = JSON.parse(raw);
+        const stateChant = parsed && parsed.settings ? parsed.settings.defaultInvocation : null;
+        if(stateChant && INVOCATIONS.includes(stateChant)) chant = stateChant;
+      }
+    }
+    if(!chant || !INVOCATIONS.includes(chant)) chant = "Veni Creator";
+    localStorage.setItem(INVOCATION_KEY, chant);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    parsed.settings = parsed.settings || {};
+    parsed.settings.defaultInvocation = chant;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+  }catch(e){
+    if(!chant || !INVOCATIONS.includes(chant)) chant = "Veni Creator";
+  }
+  const data = window.SPIRITUS_CHANTS[chant] || window.SPIRITUS_CHANTS["Veni Creator"];
+  document.getElementById("chantTitle").textContent = data.title;
+  document.getElementById("chantImage").src = data.file;
+  document.getElementById("chantImage").alt = data.title;
+  const back = document.getElementById("backToParcours");
+  if(back){
+    back.addEventListener("click", function(e){
+      e.preventDefault();
+      if(window.history.length > 1){
+        window.history.back();
+      }else{
+        window.location.href = "index.html";
+      }
+    });
+  }
+})();
+</script></body></html>

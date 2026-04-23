@@ -15,7 +15,9 @@ function getStoredInvocation(){
   }catch{return null;}
 }
 function setStoredInvocation(value){
-  try{ if(value && INVOCATIONS.includes(value)) localStorage.setItem(INVOCATION_KEY, value); }catch{}
+  try{
+    if(value && INVOCATIONS.includes(value)) localStorage.setItem(INVOCATION_KEY, value);
+  }catch{}
 }
 function getStoredWeekPrayerStyle(week){
   try{
@@ -24,7 +26,9 @@ function getStoredWeekPrayerStyle(week){
   }catch{return null;}
 }
 function setStoredWeekPrayerStyle(week, value){
-  try{ if(value && PRAYER_STYLES.includes(value)) localStorage.setItem(WEEK_PRAYER_STYLE_PREFIX + week, value); }catch{}
+  try{
+    if(value && PRAYER_STYLES.includes(value)) localStorage.setItem(WEEK_PRAYER_STYLE_PREFIX + week, value);
+  }catch{}
 }
 
 const SPECIAL_DAYS = {
@@ -74,11 +78,11 @@ function loadState(){
     const raw=localStorage.getItem(STORAGE_KEY);
     const parsed=raw?JSON.parse(raw):{};
     const state={...fallback,...parsed,settings:{...fallback.settings,...(parsed.settings||{})},weeklyChoices:Array.isArray(parsed.weeklyChoices)?parsed.weeklyChoices:fallback.weeklyChoices,daily:{...fallback.daily,...(parsed.daily||{})},currentDay:typeof parsed.currentDay==="number"?parsed.currentDay:getJourneyDay()};
-    const savedInvocation=localStorage.getItem(INVOCATION_KEY);
-    if(savedInvocation && INVOCATIONS.includes(savedInvocation)){state.settings.defaultInvocation=savedInvocation;}
+    const savedInvocation=getStoredInvocation();
+    if(savedInvocation) state.settings.defaultInvocation=savedInvocation;
     state.weeklyChoices=state.weeklyChoices.map((choice,idx)=>{
-      const savedStyle=localStorage.getItem(WEEK_PRAYER_STYLE_PREFIX+(idx+1));
-      return savedStyle && PRAYER_STYLES.includes(savedStyle) ? {...choice,prayerStyle:savedStyle} : choice;
+      const savedStyle=getStoredWeekPrayerStyle(idx+1);
+      return savedStyle ? {...choice,prayerStyle:savedStyle} : choice;
     });
     if(!raw) state.currentDay=getJourneyDay();
     return state;
@@ -87,16 +91,11 @@ function loadState(){
 let state=loadState(); let showFullText=false; let hasSyncedDayOnFirstRender=false;
 function saveState(){
   try{
-    const invocationSelect=document.getElementById("defaultInvocation");
-    if(invocationSelect && INVOCATIONS.includes(invocationSelect.value)){
-      state.settings.defaultInvocation=invocationSelect.value;
-      setStoredInvocation(invocationSelect.value);
-    }
-    const weekPrayerSelect=document.getElementById("weekPrayerStyle");
-    const currentWeek=getWeek(state.currentDay);
-    if(weekPrayerSelect && PRAYER_STYLES.includes(weekPrayerSelect.value)){
-      state.weeklyChoices[currentWeek-1]={...state.weeklyChoices[currentWeek-1],prayerStyle:weekPrayerSelect.value};
-      setStoredWeekPrayerStyle(currentWeek, weekPrayerSelect.value);
+    if(state?.settings?.defaultInvocation) setStoredInvocation(state.settings.defaultInvocation);
+    if(Array.isArray(state?.weeklyChoices)){
+      state.weeklyChoices.forEach((choice, idx)=>{
+        if(choice?.prayerStyle) setStoredWeekPrayerStyle(idx+1, choice.prayerStyle);
+      });
     }
   }catch{}
   localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
@@ -105,13 +104,11 @@ function currentContent(){return window.SPIRITUS_CONTENT[state.currentDay-1];}
 function updateDay(patch){state.daily[state.currentDay]={...state.daily[state.currentDay],...patch};saveState();render();}
 function updateSettings(patch){
   state.settings={...state.settings,...patch};
-  if(Object.prototype.hasOwnProperty.call(patch,"defaultInvocation")) setStoredInvocation(state.settings.defaultInvocation);
   saveState();
   render();
 }
 function updateWeek(index,patch){
   state.weeklyChoices[index]={...state.weeklyChoices[index],...patch};
-  if(Object.prototype.hasOwnProperty.call(patch,"prayerStyle")) setStoredWeekPrayerStyle(index+1, state.weeklyChoices[index].prayerStyle);
   saveState();
   render();
 }
@@ -128,7 +125,10 @@ function performResetAll(){
 }
 function openResetModal(){
   const modal=document.getElementById("confirmModal");
-  if(!modal) return;
+  if(!modal){
+    if(window.confirm("Êtes-vous sûr de vouloir réinitialiser ? Vous allez perdre toutes vos informations.")) performResetAll();
+    return;
+  }
   modal.classList.remove("hidden");
 }
 function closeResetModal(){
@@ -162,24 +162,34 @@ function bindEvents(){
   document.getElementById("resetDayBtn").addEventListener("click",resetDay);
   document.getElementById("resetWeekBtn").addEventListener("click",resetWeek);
   document.getElementById("resetAllBtn").addEventListener("click",resetAll);
-  document.getElementById("cancelResetBtn").addEventListener("click",closeResetModal);
-  document.getElementById("confirmResetBtn").addEventListener("click",()=>{closeResetModal();performResetAll();});
-  document.getElementById("confirmModal").addEventListener("click",(e)=>{if(e.target.id==="confirmModal") closeResetModal();});
-  ["change","input"].forEach(evt=>document.getElementById("defaultInvocation").addEventListener(evt,e=>{
-    state.settings.defaultInvocation=e.target.value;
-    setStoredInvocation(e.target.value);
+  const cancelResetBtn=document.getElementById("cancelResetBtn");
+  if(cancelResetBtn) cancelResetBtn.addEventListener("click",closeResetModal);
+  const confirmResetBtn=document.getElementById("confirmResetBtn");
+  if(confirmResetBtn) confirmResetBtn.addEventListener("click",()=>{closeResetModal();performResetAll();});
+  const confirmModal=document.getElementById("confirmModal");
+  if(confirmModal) confirmModal.addEventListener("click",(e)=>{if(e.target.id==="confirmModal") closeResetModal();});
+  document.getElementById("defaultInvocation").addEventListener("change",e=>{
+    const value=e.target.value;
+    setStoredInvocation(value);
+    updateSettings({defaultInvocation:value});
+  });
+  document.getElementById("chantLink").addEventListener("click",e=>{
+    e.preventDefault();
+    const menuValue=document.getElementById("defaultInvocation").value;
+    const chant=(menuValue && INVOCATIONS.includes(menuValue)) ? menuValue : state.settings.defaultInvocation;
+    setStoredInvocation(chant);
+    state.settings.defaultInvocation=chant;
     saveState();
-    render();
-  }));
+    window.location.href=`chant.html?chant=${encodeURIComponent(chant)}`;
+  });
   document.getElementById("fridayPenance").addEventListener("input",e=>updateSettings({fridayPenance:e.target.value}));
   document.getElementById("postLentResolution").addEventListener("input",e=>updateSettings({postLentResolution:e.target.value}));
-  ["change","input"].forEach(evt=>document.getElementById("weekPrayerStyle").addEventListener(evt,e=>{
+  document.getElementById("weekPrayerStyle").addEventListener("change",e=>{
     const weekIndex=getWeek(state.currentDay)-1;
-    state.weeklyChoices[weekIndex]={...state.weeklyChoices[weekIndex],prayerStyle:e.target.value};
-    setStoredWeekPrayerStyle(weekIndex+1,e.target.value);
-    saveState();
-    render();
-  }));
+    const value=e.target.value;
+    setStoredWeekPrayerStyle(weekIndex+1, value);
+    updateWeek(weekIndex,{prayerStyle:value});
+  });
   document.getElementById("weekIntention").addEventListener("input",e=>updateWeek(getWeek(state.currentDay)-1,{personalIntention:e.target.value}));
 }
 function renderFruits(dayState){const box=document.getElementById("fruitsBox");box.innerHTML=FRUITS.map(fruit=>`<label class="fruit-item ${dayState.fruitsChecked.includes(fruit)?"active":""}"><input type="checkbox" data-fruit="${fruit}" ${dayState.fruitsChecked.includes(fruit)?"checked":""}><span>${fruit}</span></label>`).join("");box.querySelectorAll("input[type=checkbox]").forEach(el=>el.addEventListener("change",e=>toggleFruit(e.target.dataset.fruit)));}
@@ -201,7 +211,10 @@ function render(){
   document.getElementById("invocationText").textContent=`Chant proposé : ${state.settings.defaultInvocation}. Don demandé cette semaine : ${giftData.name}.`;
   renderGiftQuote("giftQuoteInvocation", giftData);
   renderGiftQuote("giftQuoteWeek", giftData);
-  document.getElementById("chantLink").href=`chant.html?chant=${encodeURIComponent((document.getElementById("defaultInvocation")?.value)||state.settings.defaultInvocation)}`;
+  const chantLinkEl=document.getElementById("chantLink");
+  chantLinkEl.href=`chant.html?chant=${encodeURIComponent(state.settings.defaultInvocation)}`;
+  chantLinkEl.target="_self";
+  chantLinkEl.rel="";
   document.getElementById("readingPreview").textContent=`${content.reference} — ${content.excerpt}`;
   document.getElementById("readingRef").textContent=content.reference;
   document.getElementById("readingExcerpt").textContent=content.excerpt;
@@ -218,6 +231,7 @@ function render(){
   document.getElementById("prayerDoneBtn").textContent=dayState.prayerDone?"Oraison faite":"Valider l’oraison";
   document.getElementById("reviewDoneBtn").textContent=dayState.eveningReviewDone?"Relecture validée":"Valider la relecture";
   document.getElementById("defaultInvocation").value=state.settings.defaultInvocation;
+  document.getElementById("chantLink").setAttribute("target","_self");
   document.getElementById("fridayPenance").value=state.settings.fridayPenance;
   document.getElementById("postLentResolution").value=state.settings.postLentResolution;
   document.getElementById("resolutionText").textContent=state.settings.postLentResolution;
@@ -229,3 +243,4 @@ function render(){
 populateStaticSelects();
 bindEvents();
 render();
+window.addEventListener("pageshow",()=>{render();});
